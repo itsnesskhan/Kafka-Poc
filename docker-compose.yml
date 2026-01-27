@@ -1,7 +1,8 @@
-version: '3.8'
+version: "3.8"
 
 services:
 
+  # ---------------- ZOOKEEPER ----------------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -11,6 +12,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
+  # ---------------- KAFKA ----------------
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
@@ -21,9 +23,16 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+      # Internal + external listeners
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  # ---------------- MYSQL (ORDERS) ----------------
   mysql-orders:
     image: mysql:8.0
     container_name: mysql-orders
@@ -35,6 +44,7 @@ services:
     volumes:
       - mysql_orders_data:/var/lib/mysql
 
+  # ---------------- MYSQL (PAYMENTS) ----------------
   mysql-payments:
     image: mysql:8.0
     container_name: mysql-payments
@@ -46,6 +56,7 @@ services:
     volumes:
       - mysql_payments_data:/var/lib/mysql
 
+  # ---------------- ORDER SERVICE ----------------
   order-service:
     build: ./order-service
     container_name: order-service
@@ -60,6 +71,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
 
+  # ---------------- PAYMENT SERVICE ----------------
   payment-service:
     build: ./payment-service
     container_name: payment-service
@@ -74,6 +86,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
 
+# ---------------- VOLUMES ----------------
 volumes:
   mysql_orders_data:
   mysql_payments_data:

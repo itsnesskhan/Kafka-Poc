@@ -4,7 +4,7 @@ import com.payment.entity.Payment;
 import com.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,19 @@ import java.util.UUID;
 public class PaymentConsumer {
 
     private final KafkaTemplate<String, PaymentEvent> kafkaTemplate;
-
     private final PaymentRepository paymentRepository;
 
-    @KafkaListener(topics = "order-created")
+    @Value("${app.kafka.topic.payment-completed}")
+    private String paymentCompletedTopic;
+
+    @KafkaListener(topics = "${app.kafka.topic.order-created}")
     public void consume(OrderEvent event) {
-        log.info("payment consumer received data {}",event);
-        // idempotency check
+
+        log.info("PaymentConsumer received OrderEvent: {}", event);
+
+        // Idempotency check
         if (paymentRepository.existsByOrderId(event.getOrderId())) {
+            log.warn("Payment already exists for orderId={}", event.getOrderId());
             return;
         }
 
@@ -36,11 +41,13 @@ public class PaymentConsumer {
 
         paymentRepository.save(payment);
 
-        // publish payment completed event
+        // Publish payment completed event
         kafkaTemplate.send(
-                "payment-completed",
+                paymentCompletedTopic,
                 event.getOrderId(),
                 new PaymentEvent(event.getOrderId(), "SUCCESS")
         );
+
+        log.info("PaymentEvent published | orderId={} status=SUCCESS", event.getOrderId());
     }
 }

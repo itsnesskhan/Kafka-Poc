@@ -65,6 +65,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>order-service</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
