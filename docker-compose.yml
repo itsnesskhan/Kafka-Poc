@@ -65,11 +65,13 @@ services:
     depends_on:
       - kafka
       - mysql-orders
+      - payment-service
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-orders:3306/orders
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      PAYMENT_SERVICE_URL: http://payment-service:8082
 
   # ---------------- PAYMENT SERVICE ----------------
   payment-service:
