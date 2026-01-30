@@ -27,6 +27,7 @@ public class OrderService {
         // 1️⃣ Save order
         order.setStatus("CREATED");
         Order savedOrder = orderRepository.save(order);
+        log.info("order created with id : {}",savedOrder.getOrderId());
 
         // 2️⃣ Prepare OrderEvent
         OrderEvent event = new OrderEvent(order);
